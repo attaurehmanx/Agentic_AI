@@ -47,12 +47,24 @@ crypto = Agent(
     tools=[crypto_price]
 )
 
+@cl.on_chat_start
+async def load_history():
+    cl.user_session.set("history",[])
+    await cl.Message("Which coin price do you want to know.").send()
+
 @cl.on_message
 async def crypto_handler(message: cl.Message):
+    history = cl.user_session.get("history",[])
+
+    history.append({"role": "user", "content": message.content})
+
     result = await Runner.run(
         crypto,
-        input=message.content,
+        input=history,
         run_config= config
 
     )
+
+    history.append({"role":"assistant", "content":result.final_output})
+    cl.user_session.set("history", history)
     await cl.Message(content=result.final_output).send()
