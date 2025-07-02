@@ -30,14 +30,24 @@ config = RunConfig(
 
 
 @function_tool
-def crypto_price(coin):
-    "get the price of coin"
-    url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin.upper()}"
-    response = requests.get(url)
-    data= response.json()
-    symbol = data["symbol"]
-    price = data["price"]
-    return f"{symbol} price is {price}."
+def crypto_price(coin: str) -> str:
+    "get the coin price"
+    try:
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin.upper()}"
+        response = requests.get(url)
+        if response.status_code != 200:
+            return f"No data found for {coin}. incorrect symbol."
+        
+        data= response.json()
+
+        if "price" not in data:
+            return f"No price found for {coin}. Maybe incorrect symbol."
+        
+        symbol = data["symbol"]
+        price = data["price"]
+        return f"{symbol} price is {price}."
+    except Exception as e:
+        return f"Error occurred while fetching the {coin}:{e}"
 
     
 
@@ -50,7 +60,7 @@ crypto = Agent(
 @cl.on_chat_start
 async def load_history():
     cl.user_session.set("history",[])
-    await cl.Message("Which coin price do you want to know.").send()
+    await cl.Message("I am a crypto agent. Which coin price do you want to know.(e.g COINUSDT)").send()
 
 @cl.on_message
 async def crypto_handler(message: cl.Message):
